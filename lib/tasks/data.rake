@@ -67,6 +67,43 @@ task 'data:export', [:zip_path] => :environment do |task, args|
   zip_file.get_output_stream('site_settings.json') { |f| f.write(settings.to_json) }
 
   puts
+  puts "Exporting groups"
+  puts
+
+  groups = []
+
+  Group.where(automatic: false).each do |group|
+    groups << {
+      name: group.name,
+      automatic_membership_email_domains: group.automatic_membership_email_domains,
+      primary_group: group.primary_group,
+      title: group.title,
+      grant_trust_level: group.grant_trust_level,
+      incoming_email: group.incoming_email,
+      has_messages: group.has_messages,
+      flair_bg_color: group.flair_bg_color,
+      flair_color: group.flair_color,
+      bio_raw: group.bio_raw,
+      allow_membership_requests: group.allow_membership_requests,
+      full_name: group.full_name,
+      default_notification_level: group.default_notification_level,
+      visibility_level: group.visibility_level,
+      public_exit: group.public_exit,
+      public_admission: group.public_admission,
+      membership_request_template: group.membership_request_template,
+      messageable_level: group.messageable_level,
+      mentionable_level: group.mentionable_level,
+      publish_read_state: group.publish_read_state,
+      members_visibility_level: group.members_visibility_level,
+      flair_icon: group.flair_icon,
+      flair_upload_id: add_upload(zip_file, group.flair_upload_id),
+      allow_unknown_sender_topic_replies: group.allow_unknown_sender_topic_replies,
+    }
+  end
+
+  zip_file.get_output_stream('groups.json') { |f| f.write(groups.to_json) }
+
+  puts
   puts "Exporting categories"
   puts
 
@@ -138,11 +175,20 @@ task 'data:export', [:zip_path] => :environment do |task, args|
   Theme.find_each do |theme|
     puts "- Theme #{theme.name}"
 
-    exporter = ThemeStore::ZipExporter.new(theme)
-    file_path = exporter.package_filename
-    file_zip_path = File.join('themes', File.basename(file_path))
-    zip_file.add(file_zip_path, file_path)
-    themes << { name: theme.name, filename: File.basename(file_path), path: file_zip_path }
+    if theme.remote_theme.present?
+      themes << {
+        name: theme.name,
+        url: theme.remote_theme.remote_url,
+        private_key: theme.remote_theme.private_key,
+        branch: theme.remote_theme.branch
+      }
+    else
+      exporter = ThemeStore::ZipExporter.new(theme)
+      file_path = exporter.package_filename
+      file_zip_path = File.join('themes', File.basename(file_path))
+      zip_file.add(file_zip_path, file_path)
+      themes << { name: theme.name, filename: File.basename(file_path), path: file_zip_path }
+    end
   end
 
   zip_file.get_output_stream('themes.json') { |f| f.write(themes.to_json) }
@@ -215,6 +261,22 @@ task 'data:import', [:zip_path] => :environment do |task, args|
   zip_file.get_output_stream('site_settings.json') { |f| f.write(settings.to_json) }
 
   puts
+  puts "Importing groups"
+  puts
+
+  groups = JSON.parse(zip_file.get_input_stream('groups.json').read)
+
+  groups.each do |g|
+    begin
+      group = Group.find_or_initialize_by(name: g.delete('name'))
+      group.update!(g)
+    rescue => e
+      STDERR.puts "ERROR: Cannot import group: #{e.message}"
+      puts e.backtrace
+    end
+  end
+
+  puts
   puts "Importing categories"
   puts
 
@@ -272,12 +334,23 @@ task 'data:import', [:zip_path] => :environment do |task, args|
     tempfile.flush
 
     begin
-      RemoteTheme.update_zipped_theme(
-        tempfile.path,
-        t['filename'],
-        user: Discourse.system_user,
-        theme_id: Theme.find_by(name: t['name'])&.id,
-      )
+      if t['url'].present?
+        next if Theme.find_by(name: t['name']).present?
+
+        RemoteTheme.import_theme(
+          t['url'],
+          Discourse.system_user,
+          private_key: t['private_key'],
+          branch: t['branch']
+        )
+      elsif t['filename'].present?
+        RemoteTheme.update_zipped_theme(
+          tempfile.path,
+          t['filename'],
+          user: Discourse.system_user,
+          theme_id: Theme.find_by(name: t['name'])&.id,
+        )
+      end
     rescue => e
       STDERR.puts "ERROR: Cannot import theme: #{e.message}"
       puts e.backtrace
