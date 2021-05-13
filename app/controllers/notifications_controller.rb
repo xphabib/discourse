@@ -18,6 +18,8 @@ class NotificationsController < ApplicationController
 
     guardian.ensure_can_see_notifications!(user)
 
+    return render(body: nil, status: 429)
+
     if params[:recent].present?
       limit = (params[:limit] || 15).to_i
       limit = 50 if limit > 50

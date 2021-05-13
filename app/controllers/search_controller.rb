@@ -11,6 +11,7 @@ class SearchController < ApplicationController
   end
 
   def show
+    return render(body: nil, status: 429)
     permitted_params = params.permit(:q, :page)
     @search_term = permitted_params[:q]
 
