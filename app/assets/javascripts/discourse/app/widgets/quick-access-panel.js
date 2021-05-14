@@ -69,7 +69,7 @@ export default createWidget("quick-access-panel", {
   },
 
   defaultState() {
-    return { items: [], loading: false, loaded: false };
+    return { items: [], loading: false, loaded: false, error: false };
   },
 
   markRead() {
@@ -89,7 +89,10 @@ export default createWidget("quick-access-panel", {
 
     this.findNewItems()
       .then((newItems) => this.setItems(newItems))
-      .catch(() => this.setItems([]))
+      .catch(() => {
+        this.setItems([]);
+        this.state.error = true;
+      })
       .finally(() => {
         this.state.loading = false;
         this.state.loaded = true;
@@ -111,17 +114,35 @@ export default createWidget("quick-access-panel", {
       return [h("div.spinner-container", h("div.spinner"))];
     }
 
+    let bottomItems = this.bottomItems();
+
+    if (state.error) {
+      return [
+        this.attach("error-state"),
+        h("div.panel-body-bottom", bottomItems),
+      ];
+    }
+
     const items = this.getItems().length
       ? this.getItems().map((item) => this.itemHtml(item))
       : [this.emptyStatePlaceholderItem()];
 
-    let bottomItems = this.bottomItems();
     return [h("ul", items), h("div.panel-body-bottom", bottomItems)];
   },
 
   bottomItems() {
-    const result = [];
+    if (this.state.error) {
+      const retryButton = this.attach("button", {
+        title: "errors.buttons.again",
+        icon: "sync",
+        label: "errors.buttons.again",
+        className: "btn btn-default show-all",
+        action: "refreshNotifications",
+      });
+      return [retryButton];
+    }
 
+    const result = [];
     if (!this.hideBottomItems()) {
       const tab = I18n.t(this.attrs.titleKey).toLowerCase();
 
