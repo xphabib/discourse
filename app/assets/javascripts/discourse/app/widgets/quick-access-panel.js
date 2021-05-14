@@ -115,12 +115,17 @@ export default createWidget("quick-access-panel", {
       ? this.getItems().map((item) => this.itemHtml(item))
       : [this.emptyStatePlaceholderItem()];
 
-    let bottomItems = [];
+    let bottomItems = this.bottomItems();
+    return [h("ul", items), h("div.panel-body-bottom", bottomItems)];
+  },
+
+  bottomItems() {
+    const result = [];
 
     if (!this.hideBottomItems()) {
       const tab = I18n.t(this.attrs.titleKey).toLowerCase();
 
-      bottomItems.push(
+      result.push(
         // intentionally a link so it can be ctrl clicked
         this.attach("link", {
           title: "view_all",
@@ -135,7 +140,7 @@ export default createWidget("quick-access-panel", {
     }
 
     if (this.hasUnread()) {
-      bottomItems.push(
+      result.push(
         this.attach("button", {
           title: "user.dismiss_notifications_tooltip",
           icon: "check",
@@ -146,7 +151,7 @@ export default createWidget("quick-access-panel", {
       );
     }
 
-    return [h("ul", items), h("div.panel-body-bottom", bottomItems)];
+    return result;
   },
 
   getItems() {
