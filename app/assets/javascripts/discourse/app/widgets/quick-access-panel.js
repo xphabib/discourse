@@ -74,25 +74,25 @@ export default createWidget("quick-access-panel", {
 
   markRead() {
     return this.markReadRequest().then(() => {
-      this.refreshNotifications(this.state);
+      this.refreshNotifications();
     });
   },
 
-  refreshNotifications(state) {
-    if (state.loading) {
+  refreshNotifications() {
+    if (this.state.loading) {
       return;
     }
 
     if (this.getItems().length === 0) {
-      state.loading = true;
+      this.state.loading = true;
     }
 
     this.findNewItems()
       .then((newItems) => this.setItems(newItems))
       .catch(() => this.setItems([]))
       .finally(() => {
-        state.loading = false;
-        state.loaded = true;
+        this.state.loading = false;
+        this.state.loaded = true;
         this.newItemsLoaded();
         this.sendWidgetAction("itemsLoaded", {
           hasUnread: this.hasUnread(),
@@ -104,7 +104,7 @@ export default createWidget("quick-access-panel", {
 
   html(attrs, state) {
     if (!state.loaded) {
-      this.refreshNotifications(state);
+      this.refreshNotifications();
     }
 
     if (state.loading) {
