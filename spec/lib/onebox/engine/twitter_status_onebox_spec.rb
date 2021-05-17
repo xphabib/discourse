@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require "spec_helper"
+require "rails_helper"
+require "onebox_helper"
 
 describe Onebox::Engine::TwitterStatusOnebox do
   shared_examples_for "#to_html" do

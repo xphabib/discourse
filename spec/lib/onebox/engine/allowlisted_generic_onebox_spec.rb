@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require "spec_helper"
+require "rails_helper"
+require "onebox_helper"
 
 describe Onebox::Engine::AllowlistedGenericOnebox do
 
@@ -10,13 +11,11 @@ describe Onebox::Engine::AllowlistedGenericOnebox do
       expect(described_class === URI('http://foo.bar/resource')).to be(true)
     end
 
-    it "doesn't match the period as any character" do
-      expect(described_class === URI('http://eviltrouticom/resource')).to eq(false)
+    it "doesn't match an IP address" do
+      expect(described_class === URI('http://1.2.3.4/resource')).to be(false)
+      expect(described_class === URI('http://1.2.3.4:1234/resource')).to be(false)
     end
 
-    it "doesn't match a prefixed domain" do
-      expect(described_class === URI('http://aneviltrout.com/resource')).to eq(false)
-    end
   end
 
   describe 'html_providers' do
@@ -143,7 +142,6 @@ describe Onebox::Engine::AllowlistedGenericOnebox do
     let(:redirect_link) { 'http://www.dailymail.co.uk/news/article-479146/Brutality-justice-The-truth-tarred-feathered-drug-dealer.html' }
 
     before do
-      described_class.allowed_domains = %w(dailymail.co.uk discourse.org)
       FakeWeb.register_uri(
         :get,
         original_link,

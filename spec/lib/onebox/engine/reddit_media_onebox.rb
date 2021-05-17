@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require "spec_helper"
+require "rails_helper"
+require "onebox_helper"
 
 describe Onebox::Engine::RedditMediaOnebox do
   let(:link) { "https://www.reddit.com/r/colors/comments/b4d5xm/literally_nothing_black_edition" }

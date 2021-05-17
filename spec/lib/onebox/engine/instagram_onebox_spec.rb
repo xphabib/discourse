@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require "spec_helper"
+require "rails_helper"
+require "onebox_helper"
 
 describe Onebox::Engine::InstagramOnebox do
   let(:access_token) { 'abc123' }
@@ -55,7 +56,7 @@ describe Onebox::Engine::InstagramOnebox do
     let(:html) { described_class.new(link).to_html }
 
     before do
-      fake(api_link, onebox_response("instagram_old"))
+      fake(api_link, onebox_response("instagram_old_onebox"))
     end
 
     it "includes title" do

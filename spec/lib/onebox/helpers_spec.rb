@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
+require "rails_helper"
+require "onebox_helper"
 
 RSpec.describe Onebox::Helpers do
   describe '.blank?' do
@@ -56,10 +57,8 @@ RSpec.describe Onebox::Helpers do
   describe "redirects" do
     describe "redirect limit" do
       before do
-        codes = [301, 302, 303, 307, 308]
         (1..6).each do |i|
-          code = codes.pop || 302
-          FakeWeb.register_uri(:get, "https://httpbin.org/redirect/#{i}", location: "https://httpbin.org/redirect/#{i - 1}", body: "", status: [code, "Found"])
+          FakeWeb.register_uri(:get, "https://httpbin.org/redirect/#{i}", location: "https://httpbin.org/redirect/#{i - 1}", body: "", status: [302, "Found"])
         end
         fake("https://httpbin.org/redirect/0", "<!DOCTYPE html><p>success</p>")
       end

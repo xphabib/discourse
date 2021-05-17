@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require "spec_helper"
+require "rails_helper"
+require "onebox_helper"
 
 describe Onebox do
   before do
@@ -23,14 +24,6 @@ describe Onebox do
   end
 
   describe 'has_matcher?' do
-    before do
-      Onebox::Engine::AllowlistedGenericOnebox.allowed_domains = %w(youtube.com)
-    end
-
-    it "has no matcher for a made up url" do
-      expect(Onebox.has_matcher?("http://wow.com/omg/doge")).to be false
-    end
-
     it "has a matcher for a real site" do
       expect(Onebox.has_matcher?("http://www.youtube.com/watch?v=azaIE6QSMUs")).to be true
     end

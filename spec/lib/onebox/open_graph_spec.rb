@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require "spec_helper"
+require "rails_helper"
+require "onebox_helper"
 require "onebox/open_graph"
 
 describe Onebox::OpenGraph do
