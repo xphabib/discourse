@@ -5,20 +5,9 @@ require "spec_helper"
 describe Onebox::Engine::AllowlistedGenericOnebox do
 
   describe ".===" do
-    before do
-      described_class.allowed_domains = %w(eviltrout.com discourse.org)
-    end
 
-    it "matches an entire domain" do
-      expect(described_class === URI('http://eviltrout.com/resource')).to eq(true)
-    end
-
-    it "matches a subdomain" do
-      expect(described_class === URI('http://www.eviltrout.com/resource')).to eq(true)
-    end
-
-    it "doesn't match a different domain" do
-      expect(described_class === URI('http://goodtuna.com/resource')).to eq(false)
+    it "matches any domain" do
+      expect(described_class === URI('http://foo.bar/resource')).to be(true)
     end
 
     it "doesn't match the period as any character" do
@@ -74,8 +63,8 @@ describe Onebox::Engine::AllowlistedGenericOnebox do
     let(:url) { "http://www.meetup.com/Toronto-Ember-JS-Meetup/events/219939537" }
 
     before do
-      fake(url, response('meetup'))
-      fake("http://api.meetup.com/oembed?url=#{url}", response('meetup_oembed'))
+      fake(url, onebox_response('meetup'))
+      fake("http://api.meetup.com/oembed?url=#{url}", onebox_response('meetup_oembed'))
     end
 
     it 'uses the endpoint for the url' do
@@ -88,7 +77,7 @@ describe Onebox::Engine::AllowlistedGenericOnebox do
   describe "cookie support" do
     let(:url) { "http://www.dailymail.co.uk/news/article-479146/Brutality-justice-The-truth-tarred-feathered-drug-dealer.html" }
     before do
-      fake(url, response('dailymail'))
+      fake(url, onebox_response('dailymail'))
     end
 
     it "sends the cookie with the request" do
@@ -111,8 +100,8 @@ describe Onebox::Engine::AllowlistedGenericOnebox do
       let(:mobile_url) { "https://m.etsy.com/in-en/listing/87673424/personalized-word-pillow-case-letter" }
       let(:canonical_url) { "https://www.etsy.com/in-en/listing/87673424/personalized-word-pillow-case-letter" }
       before do
-        fake(mobile_url, response('etsy_mobile'))
-        fake(canonical_url, response('etsy'))
+        fake(mobile_url, onebox_response('etsy_mobile'))
+        fake(canonical_url, onebox_response('etsy'))
       end
 
       it 'fetches opengraph data and price from canonical link' do
@@ -131,8 +120,8 @@ describe Onebox::Engine::AllowlistedGenericOnebox do
       let(:discourse_topic_url) { "https://meta.discourse.org/t/congratulations-most-stars-in-2013-github-octoverse/12483" }
       let(:discourse_topic_reply_url) { "https://meta.discourse.org/t/congratulations-most-stars-in-2013-github-octoverse/12483/2" }
       before do
-        fake(discourse_topic_url, response('discourse_topic'))
-        fake(discourse_topic_reply_url, response('discourse_topic_reply'))
+        fake(discourse_topic_url, onebox_response('discourse_topic'))
+        fake(discourse_topic_reply_url, onebox_response('discourse_topic_reply'))
       end
 
       it 'fetches opengraph data from original link' do
@@ -161,7 +150,7 @@ describe Onebox::Engine::AllowlistedGenericOnebox do
         status: ["301", "Moved Permanently"],
         location: redirect_link
       )
-      fake(redirect_link, response('dailymail'))
+      fake(redirect_link, onebox_response('dailymail'))
     end
 
     it "follows redirects and includes the summary" do
@@ -181,7 +170,7 @@ describe Onebox::Engine::AllowlistedGenericOnebox do
     context 'works without description if image is present' do
       let(:cnn_url) { "https://edition.cnn.com/2020/05/15/health/gallery/coronavirus-people-adopting-pets-photos/index.html" }
       before do
-        fake(cnn_url, response('cnn'))
+        fake(cnn_url, onebox_response('cnn'))
       end
 
       it 'shows basic onebox' do

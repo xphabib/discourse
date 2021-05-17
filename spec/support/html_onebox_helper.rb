@@ -13,8 +13,8 @@ module HTMLSpecHelper
     %|<div class="onebox">#{html}</div>|
   end
 
-  def response(file)
-    file = File.join("spec", "fixtures", "#{file}.response")
+  def onebox_response(file)
+    file = File.join("spec", "fixtures", "onebox", "#{file}.response")
     File.exist?(file) ? File.read(file) : ""
   end
 
