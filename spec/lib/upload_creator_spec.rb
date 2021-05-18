@@ -504,6 +504,60 @@ RSpec.describe UploadCreator do
         expect(FastImage.size(Discourse.store.path_for(upload))).to eq([320, 320])
       end
     end
+
+    describe 'before_upload_creation event' do
+      let(:filename) { "logo.jpg" }
+      let(:file) { file_from_fixtures(filename) }
+
+      before do
+        setup_s3
+        stub_s3_store
+      end
+
+      it "doesn't save the upload if the callback raises an exception" do
+        exception = Class.new(StandardError)
+        exception_block = Proc.new { raise exception }
+
+        with_callback(exception_block) do
+          expect {
+            UploadCreator.new(file, filename).create_for(user.id)
+          }.to raise_error(exception)
+
+          expect(Upload.where(user: user).last).to be_nil
+        end
+      end
+
+      it "saves the upload if the callback doesn't raise any errors" do
+        called = false
+        block = Proc.new { called = true }
+
+        with_callback(block) do
+          created_upload = UploadCreator.new(file, filename).create_for(user.id)
+
+          expect(called).to eq(true)
+          expect(created_upload.persisted?).to eq(true)
+        end
+      end
+
+      it "doesn't call the event if the upload is not valid" do
+        SiteSetting.authorized_extensions = 'png'
+        called = false
+        block = Proc.new { called = true }
+
+        with_callback(block) do
+          created_upload = UploadCreator.new(file, filename).create_for(user.id)
+
+          expect(called).to eq(false)
+          expect(created_upload.persisted?).to eq(false)
+        end
+      end
+
+      def with_callback(event_callback)
+        DiscourseEvent.on(:before_upload_creation, &event_callback)
+        yield
+        DiscourseEvent.off(:before_upload_creation, &event_callback)
+      end
+    end
   end
 
   describe '#clean_svg!' do

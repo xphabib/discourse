@@ -151,9 +151,9 @@ class UploadCreator
         @upload.assign_attributes(attrs)
       end
 
-      return @upload unless @upload.save
-
+      return @upload unless @upload.valid?
       DiscourseEvent.trigger(:before_upload_creation, @file, is_image, @opts[:for_export])
+      @upload.save
 
       # store the file and update its url
       File.open(@file.path) do |f|
