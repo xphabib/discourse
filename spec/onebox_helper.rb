@@ -6,7 +6,7 @@ require "fakeweb"
 require "onebox"
 require 'mocha/api'
 
-require_relative "support/html_spec_helper"
+require_relative "support/html_onebox_helper"
 
 module FakeWeb
   # Monkey-patch fakeweb to support Ruby 2.4+.
